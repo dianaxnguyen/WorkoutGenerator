@@ -1109,6 +1109,26 @@
   }
 
   .mobile-tab.active { background: var(--sky-pale); color: var(--sky-deeper); font-weight: 500; }
+
+  /* ─── CUSTOM DUMBBELL CURSOR ─── */
+  body {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg fill='%230a1628'%3E%3Crect x='8' y='14' width='16' height='4' rx='2'/%3E%3Crect x='4' y='10' width='5' height='12' rx='2'/%3E%3Crect x='1' y='12' width='4' height='8' rx='1.5'/%3E%3Crect x='23' y='10' width='5' height='12' rx='2'/%3E%3Crect x='27' y='12' width='4' height='8' rx='1.5'/%3E%3C/g%3E%3C/svg%3E") 16 16, auto;
+  }
+
+  button,
+  a,
+  .chip,
+  .day-btn,
+  .day-card-header,
+  select,
+  input {
+    cursor: pointer;
+  }
+
+  input[type="number"] {
+    cursor: text;
+  }
+
 </style>
 </head>
 <body>
