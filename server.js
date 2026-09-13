@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const fetch = require('node-fetch');
+require('dotenv').config();
 
 const app = express();
 app.use(cors());
@@ -8,7 +9,12 @@ app.use(express.json());
 app.use(express.static('.'));
 
 app.post('/generate', async (req, res) => {
-  const API_KEY = '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';
+  const API_KEY = (process.env.ANTHROPIC_API_KEY || '').trim();
+
+  if (!API_KEY) {
+    console.error('Missing ANTHROPIC_API_KEY environment variable');
+    return res.status(500).json({ error: 'Missing ANTHROPIC_API_KEY on server. Set it in .env or environment.' });
+  }
 
   try {
     console.log('Sending request to Anthropic...');
@@ -21,16 +27,34 @@ app.post('/generate', async (req, res) => {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-haiku-4-5',
         max_tokens: 2500,
         stream: false,
         messages: req.body.messages
       })
     });
 
-    const data = await response.json();
-    console.log('Anthropic response:', JSON.stringify(data));
-    res.json(data);
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      data = text;
+    }
+
+    console.log('Anthropic response status:', response.status);
+    console.log('Anthropic response body:', text);
+
+    if (!response.ok) {
+      const payload = typeof data === 'string' ? { error: data } : data;
+      return res.status(response.status).json(payload);
+    }
+
+    if (typeof data === 'string') {
+      res.type('text').send(data);
+    } else {
+      res.json(data);
+    }
 
   } catch (error) {
     console.error('Error:', error.message);
