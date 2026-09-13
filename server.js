@@ -8,7 +8,7 @@ app.use(express.json());
 app.use(express.static('.'));
 
 app.post('/generate', async (req, res) => {
-  const API_KEY = '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';
+  const API_KEY = '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';
 
   try {
     console.log('Sending request to Anthropic...');
