@@ -98,25 +98,73 @@ const SwapInput = z.object({
   equipment: z.enum(EQUIPMENT),
 });
 
-// ─── OUTPUT SCHEMAS (sent to the API as structured output, then re-checked here) ───
+// ─── OUTPUT SCHEMAS ───
+// Structured outputs guarantee the *shape* (fields, types, required keys), but not numeric or
+// length limits like "10–180 minutes" or "exactly 4 days" — the SDK only passes those along as hints.
+// So: the day count is built into the shape (day_1 … day_N keys), and limits are applied
+// afterwards in normalizePlan / normalizeExercise instead of rejecting the whole response.
 const ExerciseSchema = z.object({
-  name: z.string().min(1),
-  muscle_group: z.string().min(1),
-  sets: z.string().min(1),
+  name: z.string(),
+  muscle_group: z.string(),
+  sets: z.string(),
   rest: z.string(),
   note: z.string(),
 });
 
-const PlanSchema = z.object({
-  days: z.array(z.object({
-    day: z.string().min(1),
-    focus: z.string().min(1),
-    type: z.string(),
-    duration_minutes: z.number().int().min(10).max(180),
-    exercises: z.array(ExerciseSchema).min(3).max(9),
-  })).min(1),
-  nutrition: z.string().min(1),
+const DaySchema = z.object({
+  focus: z.string(),
+  type: z.string(),
+  duration_minutes: z.number().int(),
+  exercises: z.array(ExerciseSchema),
 });
+
+const planSchemas = new Map();
+function planSchemaFor(days) {
+  if (!planSchemas.has(days)) {
+    const shape = {};
+    for (let i = 1; i <= days; i++) shape[`day_${i}`] = DaySchema;
+    shape.nutrition = z.string();
+    planSchemas.set(days, z.object(shape));
+  }
+  return planSchemas.get(days);
+}
+
+const MIN_EXERCISES = 3;
+const MAX_EXERCISES = 9;
+
+function invalidOutput(reason) {
+  console.error('AI output rejected:', reason);
+  return new ApiError(502, 'ai_invalid_response', 'The AI sent back an incomplete plan. Please try again.', true);
+}
+
+// Returns a cleaned exercise, or null if it's missing something essential.
+function normalizeExercise(ex) {
+  const clean = {
+    name: ex.name.trim(),
+    muscle_group: ex.muscle_group.trim(),
+    sets: ex.sets.trim(),
+    rest: ex.rest.trim(),
+    note: ex.note.trim(),
+  };
+  return clean.name && clean.sets ? clean : null;
+}
+
+function normalizePlan(raw, days) {
+  const out = [];
+  for (let i = 1; i <= days; i++) {
+    const d = raw[`day_${i}`];
+    const exercises = d.exercises.map(normalizeExercise).filter(Boolean).slice(0, MAX_EXERCISES);
+    if (exercises.length < MIN_EXERCISES) throw invalidOutput(`day_${i} has only ${exercises.length} usable exercises`);
+    out.push({
+      day: `Day ${i}`,
+      focus: d.focus.trim() || d.type.trim() || 'Workout',
+      type: d.type.trim(),
+      duration_minutes: Math.min(180, Math.max(10, Math.round(d.duration_minutes))),
+      exercises,
+    });
+  }
+  return { days: out, nutrition: raw.nutrition.trim() };
+}
 
 // ─── CLAUDE CALL ───
 let client;
@@ -130,8 +178,20 @@ function getClient() {
   return client;
 }
 
+// Asks for JSON matching `schema`, then runs `normalize` on it. If the output is unusable,
+// asks once more before giving up (network/overload retries are handled by the SDK itself).
+async function askForJson(prompt, schema, maxTokens, normalize) {
+  try {
+    return normalize(await requestJson(prompt, schema, maxTokens));
+  } catch (err) {
+    if (err?.code !== 'ai_invalid_response') throw err;
+    console.warn('Retrying once after unusable AI output');
+    return normalize(await requestJson(prompt, schema, maxTokens));
+  }
+}
+
 // Non-streaming call: the full response arrives at once, so it's validated as a whole.
-async function askForJson(prompt, schema, maxTokens) {
+async function requestJson(prompt, schema, maxTokens) {
   let response;
   try {
     response = await getClient().messages.create({
@@ -173,10 +233,7 @@ async function askForJson(prompt, schema, maxTokens) {
   }
 
   const result = schema.safeParse(json);
-  if (!result.success) {
-    console.error('AI output failed validation:', result.error.issues.slice(0, 5));
-    throw new ApiError(502, 'ai_invalid_response', 'The AI sent back an incomplete plan. Please try again.', true);
-  }
+  if (!result.success) throw invalidOutput(result.error.issues.slice(0, 5));
   return result.data;
 }
 
@@ -198,21 +255,16 @@ app.post('/generate', generateLimiter, async (req, res) => {
 - Age: ${p.age}, Gender: ${p.gender}, Weight: ${p.weight} ${p.unit}
 - Goal: ${p.goal}, Experience: ${p.experience}, Equipment: ${p.equipment}
 
-Return exactly ${p.days} days, labelled "Day 1" through "Day ${p.days}". For each day give:
+Fill in day_1 through day_${p.days} (one entry per training day). For each day give:
 - focus: the muscle groups trained (e.g. "Chest & Triceps")
 - type: a short label for the session (e.g. "Push", "Lower", "Full Body")
-- duration_minutes: realistic total session length in minutes, including warm-up and the listed rest periods
+- duration_minutes: realistic total session length in minutes (between 20 and 120), including warm-up and the listed rest periods
 - exercises: 5–7 exercises, each with name, muscle_group (the primary muscle group it targets), sets (formatted like "4 × 8–10"), rest (like "90s"), and a short coaching note
 
 Also give a 2–3 sentence nutrition tip specific to their goal.
 Only use exercises that are possible with their equipment. Make it specific, practical, and accurate for the person's stats and goal.`;
 
-    const plan = await askForJson(prompt, PlanSchema, 8000);
-
-    if (plan.days.length !== p.days) {
-      console.error(`Expected ${p.days} days, got ${plan.days.length}`);
-      throw new ApiError(502, 'ai_invalid_response', 'The AI sent back the wrong number of days. Please try again.', true);
-    }
+    const plan = await askForJson(prompt, planSchemaFor(p.days), 8000, raw => normalizePlan(raw, p.days));
 
     res.json({
       summary: [`${p.days} days/week`, cap(p.goal), cap(p.experience), p.equipment],
@@ -241,12 +293,13 @@ The replacement must target the same primary muscle group, be doable with "${p.e
 Do not suggest any of these (already in the workout): ${avoid.join('; ')}.
 Give: name, muscle_group, sets (formatted like "4 × 8–10", similar volume to the original), rest (like "90s"), and a short coaching note.`;
 
-    const replacement = await askForJson(prompt, ExerciseSchema, 1000);
-
     const taken = new Set(avoid.map(n => n.toLowerCase().trim()));
-    if (taken.has(replacement.name.toLowerCase().trim())) {
-      throw new ApiError(502, 'ai_invalid_response', 'The AI suggested an exercise that\'s already in this workout. Please try again.', true);
-    }
+    const replacement = await askForJson(prompt, ExerciseSchema, 1000, raw => {
+      const clean = normalizeExercise(raw);
+      if (!clean) throw invalidOutput('swap is missing name or sets');
+      if (taken.has(clean.name.toLowerCase())) throw invalidOutput(`swap repeated "${clean.name}"`);
+      return clean;
+    });
 
     res.json(replacement);
   } catch (err) {
