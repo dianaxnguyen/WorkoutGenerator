@@ -1084,6 +1084,138 @@
   .nutrition-card h4 { font-size: 19px; margin-bottom: 2px; }
   .nutrition-card p { font-size: 15px; color: var(--navy); font-weight: 600; line-height: 1.6; }
 
+  /* ─── PLAN TOOLS (save / copy / print) ─── */
+  .plan-tools {
+    flex-basis: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding-top: 0.9rem;
+    border-top: 2px dashed var(--line);
+  }
+
+  .plan-tools .btn-soft:disabled { opacity: 0.6; animation: none; cursor: default; }
+  .plan-tools .btn-soft.done { background: var(--sun); border-color: var(--sun-edge); opacity: 1; }
+
+  .plan-status { font-size: 14px; font-weight: 700; color: var(--navy); }
+  .plan-status:empty { display: none; }
+  .plan-status.warn { color: #B42318; }
+
+  /* ─── SAVED PLANS ─── */
+  .saved-section {
+    background: rgba(255,255,255,0.6);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+  }
+
+  .saved-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .saved-head h3 { font-size: clamp(22px, 3vw, 26px); }
+  .saved-note { font-size: 14px; font-weight: 700; color: var(--navy-soft); margin-top: 2px; }
+
+  .saved-count {
+    background: var(--baby);
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 800;
+    padding: 4px 12px;
+    white-space: nowrap;
+  }
+
+  .saved-count.full { background: var(--sun); }
+
+  .saved-msg {
+    background: var(--baby);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+
+  .saved-msg.warn { background: #FFF1F1; color: #B42318; }
+
+  .saved-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+    gap: 1rem;
+  }
+
+  .saved-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 1.5rem;
+    border: 2.5px dashed var(--sky);
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    color: var(--navy-soft);
+  }
+
+  .saved-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--white);
+    border: 3px solid transparent;
+    border-radius: var(--radius);
+    padding: 1.1rem 1.15rem;
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.25s, border-color 0.25s;
+  }
+
+  .saved-card:hover { box-shadow: var(--shadow-lg); }
+  .saved-card.current { border-color: var(--sky); }
+
+  .saved-card-top { display: flex; gap: 10px; align-items: flex-start; }
+
+  .saved-emoji {
+    width: 40px; height: 40px;
+    display: grid;
+    place-items: center;
+    background: var(--baby);
+    border-radius: 12px;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .saved-name { font-family: var(--font-display); font-size: 18px; font-weight: 600; line-height: 1.2; word-break: break-word; }
+  .saved-date { font-size: 13px; font-weight: 700; color: var(--navy-soft); }
+
+  .saved-open-tag {
+    position: absolute;
+    top: -11px; right: 14px;
+    background: var(--sky);
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 2px 10px;
+  }
+
+  .saved-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+  .saved-pills span { background: var(--baby); border-radius: 100px; font-size: 12px; font-weight: 800; padding: 3px 10px; }
+  .saved-pills .goal { background: var(--sun); }
+
+  .saved-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
+  .saved-actions .btn-soft { min-height: 36px; padding: 5px 12px; font-size: 13px; }
+  .saved-actions .btn-soft.primary { background: var(--sun); border-color: var(--sun-edge); }
+
+  .saved-confirm {
+    background: #FFF6D6;
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .saved-confirm .saved-actions { margin-top: 8px; }
+
+  .saved-rename { display: flex; flex-wrap: wrap; gap: 6px; }
+  .saved-rename .field-input { min-height: 40px; font-size: 15px; flex: 1 1 160px; }
+  .saved-rename-err { flex-basis: 100%; font-size: 13px; font-weight: 700; color: #B42318; }
+  .saved-rename-err:empty { display: none; }
+
   /* ─── CALORIE / BMI / MACRO CALCULATOR ─── */
   [hidden] { display: none !important; }
 
@@ -1473,6 +1605,54 @@
     cursor: text;
   }
 
+  /* ─── PRINT / PDF: just the plan, every day expanded ─── */
+  @media print {
+    @page { margin: 14mm; }
+
+    body { background: #fff !important; font-size: 12pt; }
+
+    nav, .mobile-nav, .sky, .gen-header, .form-panel, .saved-section,
+    .result-placeholder, .loading-card, .err, .plan-tools, .result-actions, .swap-btn,
+    .day-chevron, .row-err, button:not(.day-card-header) { display: none !important; }
+
+    .day-card-header { display: flex !important; }
+
+    .page { padding: 0 !important; min-height: 0 !important; animation: none !important; }
+    .gen-page { padding: 0 !important; }
+    .gen-layout { opacity: 1 !important; transform: none !important; animation: none !important; display: block; }
+
+    *, *::before, *::after { animation: none !important; transition: none !important; box-shadow: none !important; }
+    .float-in { opacity: 1 !important; transform: none !important; }
+
+    .result-top { padding: 0 0 10pt; margin-bottom: 12pt; border-radius: 0; border-bottom: 2px solid var(--navy); background: none; }
+    .result-top h3 { font-size: 20pt; }
+
+    .day-cards { display: block; }
+
+    .day-card {
+      border: 1.5px solid #9DBFDF;
+      border-radius: 12px;
+      margin-bottom: 12pt;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    /* show every day's exercises, whatever its open/closed state on screen */
+    .day-card .day-card-body { display: block !important; visibility: visible !important; }
+    .day-card-inner { overflow: visible !important; }
+
+    .day-card-header { background: var(--baby) !important; min-height: 0; padding: 8pt 12pt; }
+    .exercise-row { padding: 6pt 12pt; break-inside: avoid; }
+    .ex-emoji { width: 28px; height: 28px; font-size: 15px; }
+
+    .day-num-badge, .stat-pill, .summary-pill, .duration-pill, .nutrition-icon {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .nutrition-card { break-inside: avoid; border: 1.5px solid var(--sun-edge); }
+  }
+
 </style>
 </head>
 <body>
@@ -1852,6 +2032,12 @@
               <span class="badge" id="res-badge">AI Generated</span>
               <button class="btn-soft" id="expand-btn" onclick="toggleAll()" disabled>Expand all</button>
             </div>
+            <div class="plan-tools" id="plan-tools" hidden>
+              <button class="btn-soft" id="save-plan-btn" onclick="savePlan()">💾 Save plan</button>
+              <button class="btn-soft" id="copy-plan-btn" onclick="copyPlan()">📋 Copy plan</button>
+              <button class="btn-soft" id="print-plan-btn" onclick="printPlan()" title="Opens your browser's print dialog. Choose “Save as PDF” as the destination.">📄 Download PDF</button>
+              <p class="plan-status" id="plan-status" role="status" aria-live="polite"></p>
+            </div>
           </div>
 
           <div class="loading-card" id="loading-row" role="status" aria-live="polite">
@@ -1867,6 +2053,19 @@
           <div id="nutrition-section"></div>
         </div>
       </div>
+
+      <!-- SAVED PLANS (stored in this browser's localStorage only) -->
+      <section class="saved-section" id="saved-section" aria-labelledby="saved-title">
+        <div class="saved-head">
+          <div>
+            <h3 id="saved-title">My saved plans</h3>
+            <p class="saved-note">📱 Saved on this device only. Use Download to keep a copy.</p>
+          </div>
+          <span class="saved-count" id="saved-count"></span>
+        </div>
+        <p class="saved-msg" id="saved-msg" role="status" aria-live="polite" hidden></p>
+        <div class="saved-grid" id="saved-grid"></div>
+      </section>
     </div>
   </div>
 </div>
@@ -2051,6 +2250,7 @@
     document.getElementById('plan-summary').innerHTML = '';
     document.getElementById('nutrition-section').innerHTML = '';
     document.getElementById('expand-btn').disabled = true;
+    setPlanToolsVisible(false);
 
     document.getElementById('res-title').textContent = `${request.days}-Day ${cap(request.goal)} Split`;
     document.getElementById('res-badge').textContent = cap(request.experience);
@@ -2066,6 +2266,7 @@
       currentPlan = plan;
       planContext = { goal: request.goal, experience: request.experience, equipment: request.equipment };
       renderPlan(plan);
+      onPlanRendered(null);
     } catch (err) {
       setLoading('off');
       document.getElementById('day-cards').innerHTML = '';
@@ -2102,6 +2303,7 @@
         ...planContext,
       });
       day.exercises[e] = replacement;
+      onPlanChanged();
       const fresh = document.createElement('template');
       fresh.innerHTML = exerciseRowHtml(replacement, d, e).trim();
       const newRow = fresh.content.firstElementChild;
@@ -2579,6 +2781,411 @@
     showPage('generator');
     setTimeout(() => document.querySelector('#page-generator .form-panel').scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
   });
+</script>
+
+<script>
+  // ─── SAVED PLANS / COPY / PRINT ───
+  // Plans are stored in this browser only. Never stored: age, weight, gender.
+
+  const SAVED_KEY = 'form.savedPlans.v1';
+  const MAX_SAVED = 10;
+  const STORAGE_OFF_MSG = "Saving isn't available in this browser (storage is turned off or you're in private mode). You can still copy or download your plan.";
+
+  let currentSavedId = null;    // id of the saved plan currently on screen, if any
+  let currentPlanName = null;   // its name (null → default name)
+  let planDirty = false;        // swapped since last save?
+  const savedUi = { renaming: null, deleting: null };
+
+  const $s = id => document.getElementById(id);
+
+  // ─── STORAGE (every access wrapped; storage can be blocked, full, or hold bad data) ───
+  function readSaved() {
+    let raw;
+    try {
+      raw = localStorage.getItem(SAVED_KEY);
+    } catch {
+      return { ok: false, plans: [] };
+    }
+    if (!raw) return { ok: true, plans: [] };
+    try {
+      const list = JSON.parse(raw);
+      return { ok: true, plans: Array.isArray(list) ? list.filter(isValidSaved) : [] };
+    } catch {
+      return { ok: true, plans: [] };   // unreadable data gets replaced on the next save
+    }
+  }
+
+  function writeSaved(plans) {
+    try {
+      localStorage.setItem(SAVED_KEY, JSON.stringify(plans));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  function isValidSaved(p) {
+    return p && typeof p.id === 'string' && typeof p.name === 'string' && p.plan && Array.isArray(p.plan.days);
+  }
+
+  function newId() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+
+  function defaultPlanName() {
+    return `${currentPlan?.days?.length || 0}-day ${planContext?.goal || 'workout'} split`;
+  }
+
+  function planName() { return currentPlanName || defaultPlanName(); }
+
+  function fmtDate(iso) {
+    const d = new Date(iso);
+    return isNaN(d) ? '' : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  // ─── TOOLBAR STATE ───
+  let statusTimer;
+  function setPlanStatus(text, warn = false, sticky = false) {
+    const el = $s('plan-status');
+    clearTimeout(statusTimer);
+    el.textContent = text;
+    el.classList.toggle('warn', warn);
+    if (text && !sticky) statusTimer = setTimeout(() => { el.textContent = ''; }, 5000);
+  }
+
+  function setPlanToolsVisible(visible) {
+    $s('plan-tools').hidden = !visible;
+    setPlanStatus('');
+  }
+
+  function updateSaveBtn() {
+    const btn = $s('save-plan-btn');
+    const saved = !!currentSavedId && !planDirty;
+    btn.disabled = saved;
+    btn.classList.toggle('done', saved);
+    btn.textContent = !currentSavedId ? '💾 Save plan' : planDirty ? '💾 Save changes' : '✅ Saved';
+  }
+
+  // Called after a plan is drawn: savedId is null for a freshly generated plan.
+  function onPlanRendered(savedId, name = null) {
+    currentSavedId = savedId;
+    currentPlanName = name;
+    planDirty = false;
+    setPlanToolsVisible(true);
+    updateSaveBtn();
+    renderSavedPlans();
+  }
+
+  // Called after a swap changes the plan on screen.
+  function onPlanChanged() {
+    if (currentSavedId) planDirty = true;
+    updateSaveBtn();
+  }
+
+  // ─── SAVE ───
+  function savePlan() {
+    if (!currentPlan) return;
+    const store = readSaved();
+    if (!store.ok) return setPlanStatus(STORAGE_OFF_MSG, true, true);
+
+    const plans = store.plans;
+    const snapshot = {
+      summary: currentPlan.summary || [],
+      days: currentPlan.days,
+      nutrition: currentPlan.nutrition || '',
+    };
+    const existing = currentSavedId && plans.find(p => p.id === currentSavedId);
+
+    if (existing) {
+      existing.plan = JSON.parse(JSON.stringify(snapshot));
+      existing.savedAt = new Date().toISOString();
+    } else {
+      if (plans.length >= MAX_SAVED) {
+        setPlanStatus(`Your saved plans are full (${MAX_SAVED} max). Delete one below to make room. 🧺`, true, true);
+        $s('saved-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+      plans.unshift({
+        id: newId(),
+        name: defaultPlanName(),
+        savedAt: new Date().toISOString(),
+        goal: planContext.goal,
+        daysPerWeek: currentPlan.days.length,
+        equipment: planContext.equipment,
+        experience: planContext.experience,
+        plan: JSON.parse(JSON.stringify(snapshot)),
+      });
+    }
+
+    if (!writeSaved(plans)) {
+      return setPlanStatus("Couldn't save. Your browser's storage may be full or turned off. You can still copy or download your plan.", true, true);
+    }
+
+    if (existing) {
+      setPlanStatus('Changes saved 💾');
+    } else {
+      currentSavedId = plans[0].id;
+      currentPlanName = plans[0].name;
+      setPlanStatus(`Saved as “${plans[0].name}”. You can rename it below.`);
+    }
+    planDirty = false;
+    updateSaveBtn();
+    renderSavedPlans();
+  }
+
+  // ─── COPY AS TEXT ───
+  function planToText(plan, title) {
+    const lines = [title];
+    if (plan.summary?.length) lines.push(plan.summary.join(' · '));
+    lines.push('');
+
+    (plan.days || []).forEach(day => {
+      const meta = [day.type, day.duration_minutes ? `~${day.duration_minutes} min` : ''].filter(Boolean).join(' · ');
+      lines.push(`${day.day.toUpperCase()}: ${day.focus}${meta ? ` (${meta})` : ''}`);
+      (day.exercises || []).forEach((ex, i) => {
+        const s = splitSets(ex.sets);
+        const vol = s.raw !== undefined ? s.raw : `${s.sets} sets × ${s.reps}${/^[\d\s–\-]+$/.test(s.reps) ? ' reps' : ''}`;
+        lines.push(`  ${i + 1}. ${ex.name}: ${vol}${ex.rest ? `, rest ${ex.rest}` : ''}`);
+        if (ex.note) lines.push(`     Note: ${ex.note}`);
+      });
+      lines.push('');
+    });
+
+    if (plan.nutrition) lines.push('NUTRITION', plan.nutrition, '');
+    lines.push('Made with FORM');
+    return lines.join('\n');
+  }
+
+  async function writeClipboard(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // Fallback for browsers/contexts without the async clipboard API.
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      let ok = false;
+      try { ok = document.execCommand('copy'); } catch { ok = false; }
+      ta.remove();
+      return ok;
+    }
+  }
+
+  let copyTimer;
+  async function copyPlan() {
+    if (!currentPlan) return;
+    const btn = $s('copy-plan-btn');
+    const ok = await writeClipboard(planToText(currentPlan, $s('res-title').textContent));
+    clearTimeout(copyTimer);
+    if (ok) {
+      btn.textContent = '✅ Copied!';
+      btn.classList.add('done');
+      setPlanStatus('Copied! Paste it anywhere.');
+      copyTimer = setTimeout(() => { btn.textContent = '📋 Copy plan'; btn.classList.remove('done'); }, 2000);
+    } else {
+      setPlanStatus("Couldn't copy automatically. Try Download PDF instead.", true);
+    }
+  }
+
+  // ─── PRINT / PDF ───
+  // The print stylesheet expands every day; the page title becomes the default PDF file name.
+  let titleBeforePrint = null;
+  window.addEventListener('beforeprint', () => {
+    if (!currentPlan || !$s('page-generator').classList.contains('active')) return;
+    titleBeforePrint = document.title;
+    document.title = `${planName()} | FORM`;
+  });
+  window.addEventListener('afterprint', () => {
+    if (titleBeforePrint !== null) document.title = titleBeforePrint;
+    titleBeforePrint = null;
+  });
+
+  function printPlan() {
+    if (!currentPlan) return;
+    window.print();
+  }
+
+  // ─── SAVED PLANS LIST ───
+  function savedCardHtml(p) {
+    const isCurrent = p.id === currentSavedId;
+    let nameBlock = `<div class="saved-name">${esc(p.name)}</div>`;
+    let slot = `
+      <div class="saved-actions">
+        <button type="button" class="btn-soft primary" data-action="open" data-id="${esc(p.id)}">Open</button>
+        <button type="button" class="btn-soft" data-action="rename" data-id="${esc(p.id)}">Rename</button>
+        <button type="button" class="btn-soft" data-action="delete" data-id="${esc(p.id)}">Delete</button>
+      </div>`;
+
+    if (savedUi.renaming === p.id) {
+      nameBlock = `
+        <form class="saved-rename" data-id="${esc(p.id)}">
+          <input class="field-input" maxlength="60" value="${esc(p.name)}" aria-label="New name for this plan" />
+          <button type="submit" class="btn-soft primary">Save</button>
+          <button type="button" class="btn-soft" data-action="cancel">Cancel</button>
+          <span class="saved-rename-err" role="alert"></span>
+        </form>`;
+      slot = '';
+    } else if (savedUi.deleting === p.id) {
+      slot = `
+        <div class="saved-confirm" role="alert">
+          Delete “${esc(p.name)}”? This can't be undone.
+          <div class="saved-actions">
+            <button type="button" class="btn-soft" data-action="cancel">Keep it</button>
+            <button type="button" class="btn-soft primary" data-action="confirm-delete" data-id="${esc(p.id)}">Yes, delete</button>
+          </div>
+        </div>`;
+    }
+
+    return `
+      <article class="saved-card${isCurrent ? ' current' : ''}">
+        ${isCurrent ? '<span class="saved-open-tag">Open now</span>' : ''}
+        <div class="saved-card-top">
+          <span class="saved-emoji" aria-hidden="true">📋</span>
+          <div style="flex:1;min-width:0">
+            ${nameBlock}
+            <div class="saved-date">Saved ${esc(fmtDate(p.savedAt))}</div>
+          </div>
+        </div>
+        <div class="saved-pills">
+          <span class="goal">${esc(cap(p.goal || ''))}</span>
+          <span>${esc(p.daysPerWeek ?? p.plan.days.length)} days/week</span>
+          ${p.experience ? `<span>${esc(cap(p.experience))}</span>` : ''}
+          ${p.equipment ? `<span>${esc(p.equipment)}</span>` : ''}
+        </div>
+        ${slot}
+      </article>`;
+  }
+
+  function renderSavedPlans() {
+    const grid = $s('saved-grid'), count = $s('saved-count'), msg = $s('saved-msg');
+    const store = readSaved();
+
+    if (!store.ok) {
+      grid.innerHTML = '';
+      count.hidden = true;
+      msg.textContent = STORAGE_OFF_MSG;
+      msg.classList.add('warn');
+      msg.hidden = false;
+      return;
+    }
+
+    const n = store.plans.length;
+    count.hidden = false;
+    count.textContent = `${n} / ${MAX_SAVED} saved`;
+    count.classList.toggle('full', n >= MAX_SAVED);
+
+    msg.classList.remove('warn');
+    msg.hidden = n < MAX_SAVED;
+    msg.textContent = n >= MAX_SAVED ? `You've filled all ${MAX_SAVED} spots. Delete a plan to make room for a new one. 🧺` : '';
+
+    grid.innerHTML = n
+      ? store.plans.map(savedCardHtml).join('')
+      : '<p class="saved-empty">No saved plans yet. Generate a plan and tap 💾 Save plan to keep it here.</p>';
+
+    const input = grid.querySelector('.saved-rename input');
+    if (input) { input.focus(); input.select(); }
+  }
+
+  function openSavedPlan(id) {
+    if ($s('gen-btn').disabled) {
+      setSavedMsg('Hang on, a plan is still generating. Try again in a moment.');
+      return;
+    }
+    const p = readSaved().plans.find(x => x.id === id);
+    if (!p) return renderSavedPlans();
+
+    currentPlan = JSON.parse(JSON.stringify(p.plan));
+    planContext = { goal: p.goal, experience: p.experience, equipment: p.equipment };
+
+    $s('err-msg').classList.remove('visible');
+    $s('placeholder').style.display = 'none';
+    $s('result-content').classList.add('visible');
+    setLoading('off');
+    $s('plan-summary').innerHTML = '';
+    $s('nutrition-section').innerHTML = '';
+    $s('res-title').textContent = p.name;
+    $s('res-badge').textContent = cap(p.experience || 'Saved');
+
+    renderPlan(currentPlan);
+    onPlanRendered(p.id, p.name);
+    $s('result-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  let savedMsgTimer;
+  function setSavedMsg(text) {
+    const msg = $s('saved-msg');
+    clearTimeout(savedMsgTimer);
+    msg.classList.remove('warn');
+    msg.textContent = text;
+    msg.hidden = false;
+    savedMsgTimer = setTimeout(renderSavedPlans, 4000);
+  }
+
+  $s('saved-grid').addEventListener('click', e => {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    const { action, id } = btn.dataset;
+
+    if (action === 'open') return openSavedPlan(id);
+    if (action === 'rename') { savedUi.renaming = id; savedUi.deleting = null; return renderSavedPlans(); }
+    if (action === 'delete') { savedUi.deleting = id; savedUi.renaming = null; return renderSavedPlans(); }
+    if (action === 'cancel') { savedUi.renaming = savedUi.deleting = null; return renderSavedPlans(); }
+
+    if (action === 'confirm-delete') {
+      const store = readSaved();
+      const target = store.plans.find(p => p.id === id);
+      savedUi.deleting = null;
+      if (!store.ok || !writeSaved(store.plans.filter(p => p.id !== id))) {
+        renderSavedPlans();
+        return setSavedMsg("Couldn't delete that plan. Your browser's storage may be turned off.");
+      }
+      if (id === currentSavedId) {
+        currentSavedId = null;
+        currentPlanName = null;
+        planDirty = false;
+        updateSaveBtn();
+      }
+      renderSavedPlans();
+      if (target) setSavedMsg(`Deleted “${target.name}”.`);
+    }
+  });
+
+  $s('saved-grid').addEventListener('submit', e => {
+    e.preventDefault();
+    const form = e.target.closest('.saved-rename');
+    if (!form) return;
+    const input = form.querySelector('input');
+    const err = form.querySelector('.saved-rename-err');
+    const name = input.value.trim().replace(/\s+/g, ' ');
+    if (!name) { err.textContent = 'Give your plan a name (up to 60 characters).'; input.focus(); return; }
+
+    const store = readSaved();
+    const target = store.plans.find(p => p.id === form.dataset.id);
+    if (!target) { savedUi.renaming = null; return renderSavedPlans(); }
+    target.name = name.slice(0, 60);
+    if (!store.ok || !writeSaved(store.plans)) { err.textContent = "Couldn't save the new name. Storage may be turned off."; return; }
+
+    if (target.id === currentSavedId) {
+      currentPlanName = target.name;
+      $s('res-title').textContent = target.name;
+    }
+    savedUi.renaming = null;
+    renderSavedPlans();
+  });
+
+  $s('saved-grid').addEventListener('keydown', e => {
+    if (e.key === 'Escape' && savedUi.renaming) {
+      savedUi.renaming = null;
+      renderSavedPlans();
+    }
+  });
+
+  renderSavedPlans();
 </script>
 </body>
 </html>
