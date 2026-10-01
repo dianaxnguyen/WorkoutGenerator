@@ -36,16 +36,17 @@ The application uses an AI API through a Node.js/Express backend to generate str
 
 * dotenv
 * CORS
-* node-fetch
+* @anthropic-ai/sdk + zod (structured, validated JSON output)
+* express-rate-limit
 * Git / GitHub
 * Render
 
 ## How It Works
 
 1. The user enters their fitness information and workout preferences.
-2. The frontend creates a prompt based on the user's selections.
+2. The frontend sends those selections (not a prompt) to the backend.
 3. The application sends the request to the Express backend through the `/generate` endpoint.
-4. The backend securely sends the request to the Anthropic API.
+4. The backend validates the input, builds the prompt, and calls the Anthropic API with a JSON schema so the plan comes back in a fixed structure (validated again before it is returned).
 5. The AI generates a personalized workout plan.
 6. The returned workout data is displayed in an organized workout-plan interface.
 
